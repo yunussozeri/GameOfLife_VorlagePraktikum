@@ -54,8 +54,8 @@ public class LifeThreadPool {
      * 
      * @param task Runnable containing the work to be done 
      */
-    public void submit(Runnable task) {
-        // TODO
+    //public void submit(Runnable task) {
+        int x = 0;
     }
     
     /**
@@ -74,7 +74,7 @@ public class LifeThreadPool {
      */
     public void start() {
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = ..
+           // threads[i] = ..
             // TODO
         }
     }
