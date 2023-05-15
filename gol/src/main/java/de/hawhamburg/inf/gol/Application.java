@@ -1,6 +1,7 @@
 package de.hawhamburg.inf.gol;
 
 import com.google.common.base.Preconditions;
+import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -60,21 +61,31 @@ public class Application {
         
         // Create and start a LifeThreadPool with 50 threads
         LifeThreadPool pool = new LifeThreadPool(50);
+        System.out.println("pool created");
         pool.start();
-        
+        System.out.println("pool started");
         while (true) {
             Life life = new Life(playground);
             for (int xi = 0; xi < DIM_X; xi++) {
                 for (int yi = 0; yi < DIM_Y; yi++) {
-                                       
+                    System.out.println("a");
+                    int _x = xi;
+                    int _y = yi;
+                    System.out.println("b");
+                    Cell currentCell = playground.getCell(_x, _y);
+                    System.out.println("c");
                     // Submit new life.process() call as runable to the pool
-                    // TODO
-                    
+                    pool.submit(() -> life.process(currentCell, _x, _y));
+                     window.repaint();
+                    System.out.println("submitted");
                 }
             }
-
-            // Wait for all threads to finish this generation
-            // TODO
+            try {
+                // Wait for all threads to finish this generation
+                pool.joinAndExit();
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
             
             // Submit switch to next generation for each cell and force a
             // window repaint to update the graphics
@@ -83,8 +94,12 @@ public class Application {
                 window.repaint();
             });
             
-            // Wait SLEEP milliseconds until the next generation
-           // TODO
+            try {
+                // Wait SLEEP milliseconds until the next generation
+                Thread.sleep(SLEEP);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
         }
 
     }

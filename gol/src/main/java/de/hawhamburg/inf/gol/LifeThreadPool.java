@@ -3,6 +3,8 @@ package de.hawhamburg.inf.gol;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -33,7 +35,13 @@ public class LifeThreadPool {
      * @throws InterruptedException
      */
     public void barrier() throws InterruptedException {
-        // TODO
+
+        synchronized (tasks) {
+            while (!tasks.isEmpty()) {
+                Thread.sleep(100);
+            }
+        }
+
     }
 
     /**
@@ -56,7 +64,11 @@ public class LifeThreadPool {
      * @throws InterruptedException
      */
     public void joinAndExit() throws InterruptedException {
-        // TODO
+        // ensure thread safety for tasks thus synchronizing barrier and interrupt
+        synchronized (tasks) {
+            barrier();
+            interrupt();
+        }
     }
 
     /**
@@ -65,7 +77,9 @@ public class LifeThreadPool {
      * @param task Runnable containing the work to be done
      */
     public void submit(Runnable task) {
-        tasks.add(task);
+        synchronized (tasks) {
+            tasks.add(task);
+        }
     }
 
     /**
@@ -75,16 +89,28 @@ public class LifeThreadPool {
      * @return Next task from the pool queue
      * @throws InterruptedException
      */
+    // synchronize getting next task to ensure extraction from tasks is thread-safe
     public Runnable nextTask() throws InterruptedException {
-        return tasks.poll();
+        synchronized (tasks) {
+            if (tasks.isEmpty()) {
+                Thread.sleep(100);
+            }
+
+            Runnable next = tasks.poll();
+            return next;
+        }
+
     }
 
     /**
      * Start all threads in this pool.
      */
     public void start() {
+
         for (int i = 0; i < numThreads; i++) {
+            threads[i] = new LifeThread(this);
             threads[i].start();
         }
+
     }
 }

@@ -30,8 +30,12 @@ public class LifeThread extends Thread {
     public void run() {
         while (!isInterrupted) {
             try {
-                pool.nextTask().run();
+                var task =  pool.nextTask();
+                while( task != null){
+                task.run();
+                }
             } catch (InterruptedException ex) {
+                interrupt();
                 Logger.getLogger(LifeThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
