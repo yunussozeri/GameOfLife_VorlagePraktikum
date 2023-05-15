@@ -1,6 +1,8 @@
 package de.hawhamburg.inf.gol;
 
+import com.google.common.base.Preconditions;
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -34,9 +36,17 @@ public class Application {
      * @return 
      */
     private static Stream<Cell> createCellStream(float p) {
-        // TODO
+        Preconditions.checkArgument(p>0 && p<1 , "p ist nicht zwischen 0 und 1", p);
         
-        return null; // FIXME
+        // generate a stream of random numbers between 0 and 1
+        Stream<Double> randf = Stream.generate(Math::random);
+        
+        // create  dead cells if the random > p
+        // create alive cells if the random <= p
+        // map function transforms the random numbers to cell objects.
+        Stream<Cell> cellstream = randf.map(random -> new Cell(random > p ? 0 : 1));
+                
+        return cellstream;
     }
     
     public static void main(String[] args) {
