@@ -36,12 +36,12 @@ public class LifeThreadPool {
      */
     public void barrier() throws InterruptedException {
 
-        synchronized (tasks) {
+        synchronized (this) {
             while (!tasks.isEmpty()) {
-                Thread.sleep(100);
+                // await the the rest of threads working on the current tasks
+                this.wait();
             }
         }
-
     }
 
     /**
@@ -54,7 +54,6 @@ public class LifeThreadPool {
 
         // call interrupt() on each life thread
         _threads.forEach(lt -> lt.interrupt());
-
     }
 
     /**
@@ -65,8 +64,10 @@ public class LifeThreadPool {
      */
     public void joinAndExit() throws InterruptedException {
         // ensure thread safety for tasks thus synchronizing barrier and interrupt
-        synchronized (tasks) {
+        synchronized (this) {
+            // await until all tasks are finished.
             barrier();
+            // call interrupt on every thread!
             interrupt();
         }
     }
@@ -77,8 +78,10 @@ public class LifeThreadPool {
      * @param task Runnable containing the work to be done
      */
     public void submit(Runnable task) {
-        synchronized (tasks) {
+        synchronized (this) {
             tasks.add(task);
+            // make sure all threads know that new task is avaliable!
+            this.notifyAll();
         }
     }
 
@@ -89,25 +92,26 @@ public class LifeThreadPool {
      * @return Next task from the pool queue
      * @throws InterruptedException
      */
-    // synchronize getting next task to ensure extraction from tasks is thread-safe
+    
     public Runnable nextTask() throws InterruptedException {
-        synchronized (tasks) {
-            if (tasks.isEmpty()) {
-                Thread.sleep(100);
+        // synchronize getting next task to ensure extraction from tasks is thread-safe
+        synchronized (this) {
+            while (tasks.isEmpty()) {
+                //block while the queue is empty!
+                this.wait();
             }
-
-            Runnable next = tasks.poll();
-            return next;
+            // wake up the monitor
+            this.notify();
+            return tasks.poll();
         }
-
     }
 
     /**
      * Start all threads in this pool.
      */
     public void start() {
-
         for (int i = 0; i < numThreads; i++) {
+            // set a reference to the current object for monitor functions.
             threads[i] = new LifeThread(this);
             threads[i].start();
         }
